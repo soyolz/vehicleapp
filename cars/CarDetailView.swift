@@ -4,14 +4,13 @@ import Kingfisher
 struct CarDetailView: View {
     let car: Car
     
-    @State private var selectedPhoto = 0 //default variable for photos
+    @State private var selectedPhoto = 0
     
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 
                 // MARK: Photo Gallery
-                // A swipeable TabView — one photo per tab.
                 
                 TabView(selection: $selectedPhoto) {
                     ForEach(Array(car.photoURLs.enumerated()), id: \.offset) { index, urlStr in
@@ -22,7 +21,7 @@ struct CarDetailView: View {
                                     .overlay(
                                         Image(systemName: "car")
                                             .foregroundStyle(Color(.systemGray3))
-                                        )
+                                    )
                             }
                             .resizable()
                             .scaledToFill()
@@ -44,23 +43,19 @@ struct CarDetailView: View {
                     // MARK: Title + Price Section
                     
                     VStack(alignment: .leading, spacing: 6) {
-                        // e.g. "2020 BMW X3"
                         Text("\(String(car.year)) \(car.make) \(car.model)")
-                        //.font(.title2)
                             .fontWeight(.bold)
-                        
-                        // e.g. "xDrive30i" — shown in smaller gray text below title
+
                         Text(car.trim)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         
-                        // Price — green if available, secondary if not
                         HStack (alignment: .top, spacing: 5){
                             if let price = car.price {
                                 Text("$\(price.formatted())")
                                     .font(.title3)
                                     .fontWeight(.semibold)
-                                    .foregroundStyle(.green)  // ← Change price color here
+                                    .foregroundStyle(.green)
                             } else {
                                 Text("Call for Price")
                                     .font(.title3)
@@ -78,9 +73,7 @@ struct CarDetailView: View {
                     Divider()
                     
                     // MARK: Specs Grid
-                    // A 2-column grid of StatCell tiles.
-                    // Each StatCell shows a label and a value in a rounded box.
-                    // Optional specs (engine, transmission, etc.) only appear if they have a value.
+                    // Optional specs (engine, transmission) only appear if they have a value.
                     // To add a new spec: add `StatCell(label: "Label", value: car.newField)`
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                         StatCell(label: "Mileage", value: "\(car.mileage.formatted()) mi")
@@ -88,7 +81,6 @@ struct CarDetailView: View {
                         StatCell(label: "Fuel", value: car.fuelType)
                         StatCell(label: "Body", value: car.bodyType)
                         
-                        // Optional specs — only shown if the website provided the value
                         if let engine = car.engine {
                             StatCell(label: "Engine", value: engine)
                         }
@@ -109,8 +101,7 @@ struct CarDetailView: View {
                     Divider()
                     
                     // MARK: VIN + Stock Number
-                    // InfoRow shows a label on the left, value on the right.
-                    // Only shown if the car has these values.
+                    
                     if let vin = car.vin {
                         InfoRow(label: "VIN", value: vin)
                     }
@@ -125,16 +116,16 @@ struct CarDetailView: View {
                             Label("Call 747 Motors", systemImage: "phone.fill")
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(Color.blue)   // ← Change button color here
+                                .background(Color.blue)
                                 .foregroundStyle(.white)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
                     }
                 }
-                .padding()  // Adds padding around the entire content section below the photos
+                .padding()
             }
         }
-        // Navigation bar title — shows "2020 BMW X3" at the top when scrolled
+        // Navigation bar title
         .navigationTitle("\(String(car.year)) \(car.make) \(car.model)")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -156,7 +147,7 @@ struct StatCell: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
-        .background(Color.gray.opacity(0.08))  // ← Change opacity for darker/lighter background
+        .background(Color.gray.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
