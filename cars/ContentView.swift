@@ -1,6 +1,8 @@
 import SwiftUI
 import SwiftData
 
+let appVersion = "0.48"
+
 struct ContentView: View {
     @Environment(\.modelContext) private var context
     @EnvironmentObject var sync: SyncService
@@ -178,12 +180,13 @@ extension ContentView {
     }
 }
 // MARK: - Filter Chips Row
+//the body selectors
 extension ContentView {
     var FilterChipsView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 
-                //Filter Button
+                //Filter Button to show whole filter
                 Button {
                     showFilters.toggle()
                 } label :{
@@ -267,6 +270,7 @@ extension ContentView {
 }
 
 // MARK: - Filter Chip Component
+//the little pill component that can be re used
 struct FilterChip: View {
     let label: String
     let isSelected: Bool
@@ -454,7 +458,7 @@ struct InfoSheet: View {
                 Text("Created by Fritz Fils-Aime")
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
-                Text("Version 0.41")
+                Text("Version \(appVersion)")
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
             }
@@ -469,17 +473,17 @@ struct InfoSheet: View {
 
 // MARK: - Updates Sheet
 struct UpdatesSheet: View {
-
+    
     // MARK: - Update Entry Model
     struct UpdateEntry {
         let version: String
         let title: String
         let body: String
         let category: Category
-
+        
         enum Category {
             case feature, fix, ui, performance, general
-
+            
             var label: String {
                 switch self {
                 case .feature: return "Feature"
@@ -489,7 +493,7 @@ struct UpdatesSheet: View {
                 case .performance: return "Performance"
                 }
             }
-
+            
             var color: Color {
                 switch self {
                 case .feature: return .blue
@@ -501,43 +505,44 @@ struct UpdatesSheet: View {
             }
         }
     }
-
+    
     // MARK: - update log
-    //UpdateEntry(version: number, title: "String", body: "About the update", category: )
+    //UpdateEntry(version: number, title: "String", body: "About the update", category: ),
     
     let updates: [UpdateEntry] = [
+        UpdateEntry(version: appVersion, title: "Filter Update", body: "Added more filter options. More filters are in development.", category: .feature),
         UpdateEntry(version: "0.42", title: "Feature", body: "Fully implemented the filter sheet. Now you can filter by price, mileage, and vehicle body type. More filter(s) are in progress", category: .feature),
         UpdateEntry(version: "0.41", title: "General", body: "Implemented a update log. Redesigned the info structure, added the option to click an update button. Added Filter option, creatng the filter function soon.", category: .general),
         UpdateEntry(version: "0.41", title: "UI", body: "When enabling dark mode, the app will now be able to retain that mode.", category: .ui),
         
     ]
-
+    
     //Groups list by version number
     var groupedUpdates: [String: [UpdateEntry]] {
         Dictionary(grouping: updates, by: { $0.version })
     }
-
+    
     //newest version first
     var sortedVersions: [String] {
         groupedUpdates.keys.sorted { a, b in
             (Double(a) ?? 0) > (Double(b) ?? 0)
         }
     }
-
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-
+                
                 // Title
                 Text("What's New")
                     .font(.system(size: 20, weight: .semibold))
                     .padding(.horizontal, 20)
                     .padding(.top, 24)
                     .padding(.bottom, 16)
-
+                
                 // Loop through version
                 ForEach(sortedVersions, id: \.self) { version in
-
+                    
                     // Versions
                     Text("Version \(version)")
                         .font(.caption)
@@ -545,12 +550,12 @@ struct UpdatesSheet: View {
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 20)
                         .padding(.bottom, 12)
-
+                    
                     // Loop through entries for this version
                     ForEach(groupedUpdates[version] ?? [], id: \.title) { entry in
                         UpdateRow(entry: entry)
                     }
-
+                    
                     Spacer().frame(height: 8)
                 }
             }
@@ -563,10 +568,10 @@ struct UpdatesSheet: View {
 // MARK: - Update Row Component
 struct UpdateRow: View {
     let entry: UpdatesSheet.UpdateEntry
-
+    
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-
+            
             //status dot
             ZStack {
                 Circle()
@@ -577,7 +582,7 @@ struct UpdateRow: View {
                     .frame(width: 8, height: 8)
             }
             .padding(.top, 14)
-
+            
             // The card
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
@@ -590,7 +595,7 @@ struct UpdateRow: View {
                         .background(entry.category.color.opacity(0.12))
                         .clipShape(Capsule())
                         .overlay(Capsule().strokeBorder(entry.category.color.opacity(0.5), lineWidth: 0.5))
-
+                    
                     Text(entry.title)
                         .font(.system(size: 14, weight: .semibold))
                 }
@@ -604,14 +609,14 @@ struct UpdateRow: View {
             .background(Color(.systemGray6).opacity(0.5))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color(.systemGray4), lineWidth: 0.5))}
-            .padding(.horizontal, 20)
-            .padding(.bottom, 12)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 12)
     }
 }
 
 // MARK: - Filter Sheet
 struct FilterSheet: View {
-
+    
     let cars: [Car]
     @Binding var minPrice: Int?
     @Binding var maxPrice: Int?
@@ -619,30 +624,31 @@ struct FilterSheet: View {
     @Binding var maxMileage: Int?
     @Binding var fuelType: String?
     @Binding var bodyType: String?
-
+    
     @State private var minPriceValue: String = ""
     @State private var maxPriceValue: String = ""
     @State private var minMileageValue: String = ""
     @State private var maxMileageValue: String = ""
-
+    
     @Environment(\.dismiss) var dismiss
-
+    
     let fuelTypes = ["Gasoline", "Hybrid", "Electric", "Diesel"]
-
+    let bodyTypes = ["SUV", "Sedan", "Coupe", "Pickup Truck"]
+    
     var maxCarPrice: Int {
         cars.max(by: { ($0.price ?? 0) < ($1.price ?? 0) })?.price ?? 200000
     }
-
+    
     var activeFilterCount: Int {
         [minPrice, maxPrice, minMileage, maxMileage]
             .compactMap { $0 }.count +
         (fuelType != nil ? 1 : 0) +
         (bodyType != nil ? 1 : 0)
     }
-
+    
     var body: some View {
         VStack(spacing: 0) {
-
+            
             // Header
             HStack {
                 Button("Reset") { clearAll() }
@@ -659,18 +665,58 @@ struct FilterSheet: View {
             .padding(.horizontal, 20)
             .padding(.top, 20)
             .padding(.bottom, 16)
-
+            
             Divider()
-
+            
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-
+                    
+                    //Body Type
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Body type")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                FilterChip(label: "Any", isSelected: bodyType == nil) {
+                                    bodyType = nil
+                                }
+                                ForEach(bodyTypes, id: \.self) { type in
+                                    FilterChip(label: type, isSelected: bodyType == type) {
+                                        bodyType = bodyType == type ? nil : type
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    //Fuel type
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Fuel type")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                FilterChip(label: "Any", isSelected: fuelType == nil) {
+                                    fuelType = nil
+                                }
+                                ForEach(fuelTypes, id: \.self) { type in
+                                    FilterChip(label: type, isSelected: fuelType == type) {
+                                        fuelType = fuelType == type ? nil : type
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
                     // Price range
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Price range")
                             .font(.subheadline)
                             .fontWeight(.medium)
-
+                        
                         HStack(spacing: 10) {
                             HStack(spacing: 6) {
                                 Text("$")
@@ -688,9 +734,9 @@ struct FilterSheet: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                             .overlay(RoundedRectangle(cornerRadius: 10)
                                 .strokeBorder(Color(.systemGray4), lineWidth: 0.5))
-
+                            
                             Text("—").foregroundStyle(.secondary)
-
+                            
                             HStack(spacing: 6) {
                                 Text("$")
                                     .foregroundStyle(.secondary)
@@ -709,13 +755,13 @@ struct FilterSheet: View {
                                 .strokeBorder(Color(.systemGray4), lineWidth: 0.5))
                         }
                     }
-
+                    
                     // Mileage range
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Mileage range")
                             .font(.subheadline)
                             .fontWeight(.medium)
-
+                        
                         HStack(spacing: 10) {
                             HStack(spacing: 6) {
                                 Text("mi")
@@ -733,9 +779,9 @@ struct FilterSheet: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                             .overlay(RoundedRectangle(cornerRadius: 10)
                                 .strokeBorder(Color(.systemGray4), lineWidth: 0.5))
-
+                            
                             Text("—").foregroundStyle(.secondary)
-
+                            
                             HStack(spacing: 6) {
                                 Text("mi")
                                     .foregroundStyle(.secondary)
@@ -754,32 +800,12 @@ struct FilterSheet: View {
                                 .strokeBorder(Color(.systemGray4), lineWidth: 0.5))
                         }
                     }
-
-                    // Fuel type
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Fuel type")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                FilterChip(label: "Any", isSelected: fuelType == nil) {
-                                    fuelType = nil
-                                }
-                                ForEach(fuelTypes, id: \.self) { type in
-                                    FilterChip(label: type, isSelected: fuelType == type) {
-                                        fuelType = fuelType == type ? nil : type
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
                 .padding(20)
             }
-
+            
             Divider()
-
+            
             // Bottom buttons
             VStack(spacing: 10) {
                 Button {
@@ -796,7 +822,7 @@ struct FilterSheet: View {
                             .strokeBorder(Color(.systemGray4), lineWidth: 0.5))
                 }
                 .foregroundStyle(.primary)
-
+                
                 Button {
                     applyFilters()
                     dismiss()
@@ -819,14 +845,17 @@ struct FilterSheet: View {
             restoreFields()
         }
     }
-
+    
+    
+    //set the values
     func applyFilters() {
         minPrice = minPriceValue.isEmpty ? nil : Int(minPriceValue)
         maxPrice = maxPriceValue.isEmpty ? nil : Int(maxPriceValue)
         minMileage = minMileageValue.isEmpty ? nil : Int(minMileageValue)
         maxMileage = maxMileageValue.isEmpty ? nil : Int(maxMileageValue)
     }
-
+    
+    //clear values
     func clearAll() {
         minPrice = nil
         maxPrice = nil
@@ -839,7 +868,7 @@ struct FilterSheet: View {
         minMileageValue = ""
         maxMileageValue = ""
     }
-
+    
     func restoreFields() {
         if let v = minPrice { minPriceValue = String(v) }
         if let v = maxPrice { maxPriceValue = String(v) }
