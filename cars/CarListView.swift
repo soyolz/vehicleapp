@@ -1,19 +1,6 @@
 import SwiftUI
 import Kingfisher
 
-struct CarListView: View {
-    let cars: [Car]
-    
-    var body: some View {
-        List(cars) { car in
-            NavigationLink(destination: CarDetailView(car: car)) {
-                CarRowView(car: car)
-            }
-        }
-        .listStyle(.plain)
-    }
-}
-
 struct CarRowView: View {
     let car: Car
     

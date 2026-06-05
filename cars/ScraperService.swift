@@ -103,12 +103,31 @@ class ScraperService {
         
         var photoHash = ""
         var photoCount = 0
-        let images = try doc.select("img[src*='/photo/\(id)/']")
-        if let firstSrc = try images.first()?.attr("src") {
-            let filename = firstSrc.split(separator: "/").last ?? ""
-            let hashPart = filename.split(separator: "_").dropFirst().joined(separator: "_")
-            photoHash = hashPart.replacingOccurrences(of: ".jpg", with: "")
-            photoCount = images.count
+
+        // Some sites lazy-load images: early photos are in `src`, later ones in `data-src`.
+        // We check both so we don't miss any photos or get a low count.
+        var photoSources: [String] = []
+        for img in try doc.select("img") {
+            let src     = (try? img.attr("src"))      ?? ""
+            let dataSrc = (try? img.attr("data-src")) ?? ""
+            if src.contains("/photo/\(id)/")     { photoSources.append(src) }
+            else if dataSrc.contains("/photo/\(id)/") { photoSources.append(dataSrc) }
+        }
+
+        //photo optimization cause it was a lil too slow
+        if let firstSrc = photoSources.first {
+            let filename = firstSrc.components(separatedBy: "/").last ?? ""
+            let parts    = filename.components(separatedBy: "_")
+            if parts.count >= 2 {
+                photoHash = parts.dropFirst().joined(separator: "_")
+                    .replacingOccurrences(of: ".jpg", with: "")
+            }
+
+            let maxPhotoNum = photoSources.compactMap { src -> Int? in
+                let name = src.components(separatedBy: "/").last ?? ""
+                return Int(name.components(separatedBy: "_").first ?? "")
+            }.max()
+            photoCount = maxPhotoNum ?? photoSources.count
         }
 
         let mileageStr = specDict["Mileage"]?
